@@ -1,0 +1,61 @@
+1. Generate a reusable Axios HTTP client for a React app
+- Create a `src/api/httpClient.js` file.
+- Accept a base URL and API key from environment variables (REACT_APP_API_BASE_URL, REACT_APP_API_KEY).
+- Configure:
+  - Default headers with `Authorization: Bearer <API_KEY>`.
+  - Timeout of 10 seconds.
+- Add interceptors:
+  - Log request method, URL, and timestamp to the console (in dev mode only).
+  - Log responses with status code and duration.
+  - Handle and retry on transient network errors (up to 3 retries).
+- Export the configured Axios instance for use in services.
+
+2 Create a `src/utils/ApiError.js` module:
+- Export a class `ApiError` extending Error.
+- Include fields: httpStatus, errorCode, errorDetails.
+- Add a static method `fromAxiosError(error)` to normalize Axios errors.
+- Include a clear message for network errors or API failures.
+
+
+3 Create a `src/services/paymentService.js` file for integrating with a 3rd-party payment API.
+Requirements:
+- Import the Axios client from `httpClient.js`.
+- Implement `processPayment(paymentData)`:
+  - POST to `/payments`.
+  - Validate required fields before request.
+  - Return normalized response: { transactionId, status, amount, currency, createdAt }.
+- Implement `refundPayment(refundData)`:
+  - POST to `/refunds`.
+  - Validate fields before request.
+  - Return normalized refund response.
+- Implement `checkPaymentStatus(transactionId)`:
+  - GET `/payments/{transactionId}`.
+  - Return normalized status.
+- Handle API failures with `ApiError`.
+
+
+4 Create a `src/hooks/usePaymentApi.js` React hook:
+- Use `useState` and `useCallback` to manage loading, error, and data state.
+- Provide functions: `makePayment`, `refundPayment`, and `getPaymentStatus`.
+- Internally call `paymentService.js` functions.
+- Ensure errors are caught and stored in state.
+- Return { loading, error, data, makePayment, refundPayment, getPaymentStatus }.
+
+
+5. Create a `src/components/PaymentForm.jsx` React component:
+- Use Material UI form elements.
+- Include fields for amount, currency, and payment method.
+- On submit:
+  - Call `makePayment` from `usePaymentApi` hook.
+  - Show success message with transactionId and status.
+  - Show error message if API call fails.
+- Include buttons for:
+  - "Check Status" — calls `getPaymentStatus`.
+  - "Refund Payment" — calls `refundPayment`.
+- Show loading indicators when requests are in progress.
+
+
+6. Create a `src/pages/PaymentDemo.jsx` page:
+- Render `PaymentForm` inside a centered container.
+- Display a simple title and description of the API integration.
+
